@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DMT Woordenflitser & Woordentrainer (Oefenversie 1 & 2)</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --primary: #1d4ed8;
+    --primary-hover: #1e40af;
+    --primary-soft: #eff6ff;
+    --accent: #0f766e;
+    --accent-soft: #f0fdfa;
+    --text: #0f172a;
+    --muted: #475569;
+    --border: #e2e8f0;
+    --danger: #dc2626;
+    --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.45;
+  }
+  .container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 20px 16px 48px;
+  }
+  header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #0284c7 100%);
+    color: #fff;
+    padding: 22px 26px;
+    border-radius: 18px;
+    box-shadow: 0 10px 25px rgba(29, 78, 216, 0.18);
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+  }
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  header p {
+    margin: 0;
+    font-size: 0.92rem;
+    opacity: 0.92;
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn-light {
+    background: rgba(255,255,255,0.16);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.32);
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-light:hover { background: rgba(255,255,255,0.26); }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 860px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+  .panel-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 0 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .seg-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .seg-btn {
+    padding: 8px 13px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: #f8fafc;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.14s;
+  }
+  .seg-btn:hover { border-color: #93c5fd; background: #eff6ff; }
+  .seg-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .lvl-btn {
+    padding: 9px 6px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.14s;
+  }
+  .lvl-btn .lvl-name { display: block; font-weight: 800; font-size: 0.95rem; }
+  .lvl-btn .lvl-wpm { display: block; font-size: 0.75rem; color: var(--muted); }
+  .lvl-btn.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .lvl-btn.active .lvl-wpm { color: var(--accent); font-weight: 700; }
+  .norm-box {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 0.86rem;
+    color: var(--muted);
+  }
+  .norm-box strong { color: var(--text); }
+  .flash-stage {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    text-align: center;
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .flash-stage.fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    border-radius: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28px 36px;
+  }
+  .stage-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .word-box {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 18px;
+    margin: 12px 0 18px;
+    padding: 24px;
+    position: relative;
+    transition: background 0.15s;
+  }
+  .flash-stage.fullscreen .word-box {
+    flex: 1;
+    min-height: 0;
+    margin: 18px 0;
+  }
+  .word-display {
+    font-size: clamp(3.4rem, 9vw, 6.8rem);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--text);
+    user-select: none;
+    line-height: 1.1;
+  }
+  .flash-stage.fullscreen .word-display {
+    font-size: clamp(5rem, 13vw, 10rem);
+  }
+  .word-sub {
+    margin-top: 12px;
+    font-size: 0.95rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .pulse-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--success);
+    display: inline-block;
+    opacity: 0.25;
+    transition: transform 0.1s, opacity 0.1s;
+  }
+  .pulse-dot.beat {
+    opacity: 1;
+    transform: scale(1.45);
+  }
+  .progress-wrap {
+    width: 100%;
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #2563eb, #0ea5e9);
+    transition: width 0.2s linear;
+  }
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .btn-main {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 13px 26px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25);
+    transition: all 0.15s;
+  }
+  .btn-main:hover { background: var(--primary-hover); transform: translateY(-1px); }
+  .btn-sec {
+    background: #f1f5f9;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-sec:hover { background: #e2e8f0; }
+  .speed-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  input[type="range"] {
+    flex: 1;
+    min-width: 150px;
+    accent-color: var(--primary);
+  }
+  input[type="number"], select {
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: #fff;
+  }
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    z-index: 10000;
+    padding: 24px 16px;
+    overflow-y: auto;
+  }
+  .modal-backdrop.open { display: block; }
+  .modal {
+    max-width: 920px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  }
+  .word-cols {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+    font-size: 0.92rem;
+  }
+  @media (max-width: 720px) {
+    .word-cols { grid-template-columns: repeat(2, 1fr); }
+  }
+  .word-col {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+  }
+  .word-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    border-bottom: 1px solid #eef2f6;
+  }
+  .word-row span.num { color: #94a3b8; font-size: 0.78rem; width: 28px; }
+  .word-row span.txt { font-weight: 600; flex: 1; }
+  @media print {
+    body * { visibility: hidden; }
+    #wordModal, #wordModal * { visibility: visible; }
+    #wordModal { position: absolute; left: 0; top: 0; background: #fff; padding: 0; }
+    .no-print { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>DMT Woordenflitser & Woordentrainer (Oefenversie 1 & 2)</h1>
+      <p>Twee zelfstandige oefenversies (Oefenversie 1 & 2) op DMT-niveau voor Groep 3 t/m 8 (M3–M8) · Publiek deelbaar</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-light" onclick="openWordModal()">📋 Bekijk / print woordenlijst (150)</button>
+      <button class="btn-light" onclick="toggleFullscreen()">🖥️ Digibord volledig scherm</button>
+    </div>
+  </header>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-title">1. Kies versie &amp; leeskaart</div>
+      <div class="seg-group" id="variantGroup">
+        
+        <button class="seg-btn active" data-var="O1" onclick="setVariant('O1')">Oefenversie 1</button>
+        <button class="seg-btn" data-var="O2" onclick="setVariant('O2')">Oefenversie 2</button>
+        
+      </div>
+      <div class="seg-group" id="cardGroup">
+        <button class="seg-btn active" data-card="1" onclick="setCard('1')">Kaart 1 (MKM / zuiver)</button>
+        <button class="seg-btn" data-card="2" onclick="setCard('2')">Kaart 2 (Clusters)</button>
+        <button class="seg-btn" data-card="3" onclick="setCard('3')">Kaart 3 (Meerlettergrepig)</button>
+      </div>
+      <div class="panel-title" style="margin-top:10px;">2. Oefenmodus &amp; ronde</div>
+      <div class="seg-group" id="modeGroup">
+        <button class="seg-btn active" data-mode="parts" onclick="setMode('parts')">1 kaart in 3 delen (1 min)</button>
+        <button class="seg-btn" data-mode="sequence" onclick="setMode('sequence')">DMT-reeks (Kaart 1 → 2 → 3)</button>
+        <button class="seg-btn" data-mode="full" onclick="setMode('full')">Vrije ronde (1–150 doorlopend)</button>
+      </div>
+      <div class="seg-group" id="partGroup">
+        <button class="seg-btn active" data-part="0" onclick="setPart(0)">Deel 1 (woord 1–50)</button>
+        <button class="seg-btn" data-part="1" onclick="setPart(1)">Deel 2 (woord 51–100)</button>
+        <button class="seg-btn" data-part="2" onclick="setPart(2)">Deel 3 (woord 101–150)</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">
+        <span>3. Groep, afnamemoment &amp; streefniveau (I–V)</span>
+        <select id="momentSelect" onchange="updateNorms()">
+          <option value="M3">Groep 3 · M3 (medio)</option>
+          <option value="E3">Groep 3 · E3 (einde)</option>
+          <option value="M4">Groep 4 · M4 (medio)</option>
+          <option value="E4">Groep 4 · E4 (einde)</option>
+          <option value="M5">Groep 5 · M5 (medio)</option>
+          <option value="E5">Groep 5 · E5 (einde)</option>
+          <option value="M6">Groep 6 · M6 (medio)</option>
+          <option value="E6">Groep 6 · E6 (einde)</option>
+          <option value="M7" selected>Groep 7 · M7 (medio)</option>
+          <option value="E7">Groep 7 · E7 (einde)</option>
+          <option value="M8">Groep 8 · M8 (medio)</option>
+        </select>
+      </div>
+      <div class="level-grid" id="levelGrid">
+        <button class="lvl-btn" data-lvl="V" onclick="selectLevel('V')"><span class="lvl-name">Niveau V</span><span class="lvl-wpm" id="wpmV">- wpm</span></button>
+        <button class="lvl-btn" data-lvl="IV" onclick="selectLevel('IV')"><span class="lvl-name">Niveau IV</span><span class="lvl-wpm" id="wpmIV">- wpm</span></button>
+        <button class="lvl-btn active" data-lvl="III" onclick="selectLevel('III')"><span class="lvl-name">Niveau III</span><span class="lvl-wpm" id="wpmIII">- wpm</span></button>
+        <button class="lvl-btn" data-lvl="II" onclick="selectLevel('II')"><span class="lvl-name">Niveau II</span><span class="lvl-wpm" id="wpmII">- wpm</span></button>
+        <button class="lvl-btn" data-lvl="I" onclick="selectLevel('I')"><span class="lvl-name">Niveau I</span><span class="lvl-wpm" id="wpmI">- wpm</span></button>
+      </div>
+      <div class="speed-bar">
+        <label for="wpmSlider" style="font-weight:700;font-size:0.88rem;">Tempo:</label>
+        <input type="range" id="wpmSlider" min="10" max="220" value="53" oninput="setManualWpm(this.value)">
+        <input type="number" id="wpmInput" min="10" max="220" value="53" style="width:74px;" onchange="setManualWpm(this.value)">
+        <span style="font-size:0.85rem;font-weight:700;">wpm</span>
+      </div>
+      <div class="norm-box" id="normInfo" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <div class="flash-stage" id="flashStage">
+    <div class="stage-top">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span class="badge" id="activeCardBadge">Kaart</span>
+        <span class="badge" style="background:#f0fdfa;color:#0f766e;" id="activeSpeedBadge">53 woorden/min</span>
+        <label style="font-size:0.84rem;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="countdownCheck" checked> 3-2-1 aftellen
+        </label>
+        <label style="font-size:0.84rem;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="soundCheck" checked> Geluidssignaal
+        </label>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="pulse-dot" id="pulseDot" title="Ritmepuls"></span>
+        <span style="font-weight:800;font-size:1.15rem;font-variant-numeric:tabular-nums;" id="timerDisplay">01:00</span>
+        <button class="btn-sec" style="padding:6px 11px;font-size:0.82rem;" onclick="toggleFullscreen()">⛶ Scherm</button>
+      </div>
+    </div>
+
+    <div class="word-box">
+      <div class="word-display" id="wordDisplay">Klaar?</div>
+      <div class="word-sub" id="wordSub">Druk op Start om 1 minuut te flitsen</div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-main" id="startBtn" onclick="togglePlay()">▶ Start 1 minuut</button>
+      <button class="btn-sec" onclick="resetSession()">↺ Reset</button>
+      <button class="btn-sec" id="nextPartBtn" onclick="nextBlock()">Volgende deel →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="wordModal" onclick="if(event.target===this) closeWordModal()">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;" class="no-print">
+      <h2 style="margin:0;font-size:1.2rem;" id="modalTitle">Woordenlijst</h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-main" style="padding:8px 14px;font-size:0.88rem;" onclick="window.print()">🖨️ Afdrukken</button>
+        <button class="btn-sec" style="padding:8px 14px;font-size:0.88rem;" onclick="closeWordModal()">Sluiten ✕</button>
+      </div>
+    </div>
+    <p style="margin:6px 0 0;color:var(--muted);font-size:0.86rem;" id="modalSub">Leesvolgorde van boven naar beneden per kolom (5 kolommen van 30 woorden).</p>
+    <div class="word-cols" id="wordCols"></div>
+  </div>
+</div>
+
+<script>
+const WORDS = {"1_1": ["mes", "zon", "lip", "tak", "bel", "vis", "kam", "pet", "sok", "bus", "wol", "jas", "bed", "mug", "pit", "zak", "pot", "kop", "pen", "hut", "vel", "hok", "mok", "put", "wet", "sop", "tip", "rij", "maan", "roos", "huis", "boek", "deur", "neus", "muis", "been", "teen", "buik", "kaas", "soep", "koek", "peer", "zaag", "bijl", "wiel", "muur", "tuin", "hek", "pad", "meer", "dal", "bos", "wei", "rok", "kom", "lat", "weg", "dag", "nat", "dop", "mus", "vos", "big", "rat", "mol", "tor", "bij", "das", "bok", "lam", "pijl", "vijf", "tien", "nul", "een", "veel", "rood", "wit", "fel", "dof", "mal", "fijn", "leuk", "boos", "moe", "ziek", "heel", "diep", "laag", "hoog", "wijd", "nauw", "oud", "loop", "ren", "lees", "kijk", "eet", "waak", "huil", "zoek", "geef", "neem", "deel", "maak", "koop", "houd", "zet", "leg", "pak", "duw", "mis", "win", "roep", "kauw", "pauw", "rauw", "gauw", "ruw", "ja", "nee", "zo", "al", "en", "of", "in", "bad", "bek", "ben", "bil", "bod", "bol", "bom", "bon", "dam", "dan", "dat", "dek", "del", "deuk", "dief", "dier", "dit", "doek", "doel", "doen", "dok", "dood", "doop", "door"], "2_1": ["bloem", "stoel", "krant", "strand", "brood", "kaars", "schip", "vlieg", "slang", "schaap", "hond", "hand", "tand", "land", "zand", "mand", "band", "rand", "kast", "vast", "last", "nacht", "wacht", "lucht", "zucht", "vocht", "tocht", "macht", "vracht", "groen", "blauw", "bruin", "grijs", "paars", "groot", "klein", "breed", "smal", "snel", "traag", "vroeg", "spring", "dans", "schrijf", "drink", "droom", "vind", "help", "kleur", "klank", "plank", "bank", "dank", "rank", "slank", "drank", "frank", "klink", "blink", "stink", "vink", "zink", "pink", "hink", "link", "wink", "klomp", "romp", "lomp", "domp", "somp", "damp", "kamp", "lamp", "ramp", "stamp", "kramp", "kwast", "nest", "rest", "vest", "best", "test", "pest", "kist", "list", "twist", "gist", "kost", "post", "vorst", "borst", "dorst", "worst", "barst", "gerst", "kerst", "kunst", "gunst", "dienst", "angst", "hengst", "oogst", "hoest", "woest", "roest", "feest", "beest", "geest", "meest", "leest", "krijg", "zwijg", "stijg", "spijt", "vlijt", "slijt", "strijd", "glijd", "snijd", "wijst", "lijst", "prijs", "spijs", "kruis", "sluis", "pluis", "gruis", "spuit", "fluit", "sluit", "kruit", "spruit", "stuit", "bruid", "kruip", "sluip", "druip", "stuip", "schuif", "stuif", "kluif", "snuif", "pruik", "struik", "kruik", "kruin", "schuin", "bruis", "stroom"], "3_1": ["appel", "banaan", "citroen", "meloen", "tomaat", "wortel", "komkommer", "paprika", "aardappel", "spinazie", "broccoli", "bloemkool", "sperzieboon", "champignon", "asperge", "radijsje", "augurk", "olijfboom", "perenboom", "appelmoes", "pannenkoek", "boterham", "hagelslag", "pindakaas", "chocolade", "dropveter", "pepermunt", "suikerspin", "appeltaart", "slagroomtaart", "verjaardag", "cadeautje", "slinger", "ballon", "feestmuts", "uitnodiging", "traktatie", "kaarsjes", "felicitatie", "visite", "schoolplein", "klaslokaal", "schoolbord", "schrijfschrift", "vulpen", "gummetje", "puntenslijper", "etui", "rugzak", "broodtrommel", "drinkbeker", "gymzaal", "gymschoenen", "kleedkamer", "zwembad", "zwembroek", "badpak", "handdoek", "duikplank", "glijbaan", "speeltuin", "schommel", "wipwap", "zandbak", "klimrek", "draaimolen", "trampoline", "skelter", "steppen", "fietsbel", "fietspad", "fietstocht", "fietspomp", "achterlicht", "koplamp", "bagagedrager", "stuurpen", "trapper", "kettingkast", "ventiel", "ziekenhuis", "dokter", "tandarts", "apotheek", "pleisterdoos", "verbanddoos", "medicijn", "thermometer", "stethoscoop", "ambulances", "brandweer", "brandweerman", "brandslang", "ladderwagen", "sirene", "politiebureau", "agent", "handboeien", "verkeerslicht", "zebrapad", "rotonde", "snelweg", "viaduct", "tunnel", "spoorweg", "treinstation", "perron", "conducteur", "machinist", "treinkaartje", "koffer", "paspoort", "vliegtuig", "vliegveld", "piloot", "stewardess", "landingsbaan", "luchthaven", "vakantie", "camping", "tentstok", "slaapzak", "luchtbed", "zaklamp", "zakmes", "kompas", "wandelkaart", "bergtop", "waterval", "gletsjer", "vulkaan", "woestijn", "oerwoud", "savanne", "oceaan", "eiland", "schiereiland", "kustlijn", "vuurtoren", "zeilschip", "vissersboot", "havenstad", "anker", "reddingsboei", "kapitein", "matroos", "kombuis", "scheepsbel", "duikboot", "onderzeeër"], "1_2": ["duim", "duin", "duur", "ei", "eik", "eis", "er", "feit", "fok", "fop", "fout", "fuik", "gaan", "gaar", "gat", "geen", "geur", "gier", "giet", "gif", "gij", "gil", "goed", "gom", "goor", "goot", "goud", "gul", "gun", "haag", "haal", "haan", "haar", "haas", "haat", "ham", "heb", "heen", "heer", "hei", "hel", "hem", "het", "heug", "heul", "heup", "hiel", "hier", "hij", "hijs", "hip", "hit", "hoek", "hoep", "hoes", "hof", "hoop", "hoor", "hop", "hout", "houw", "huid", "huif", "hun", "hup", "ik", "is", "jaar", "jaag", "jam", "jij", "jok", "jou", "juf", "juk", "jus", "kaak", "kaap", "kaf", "kan", "kap", "kar", "kas", "keel", "keep", "keer", "kees", "kek", "ken", "keur", "keus", "kiek", "kiel", "kiem", "kil", "kin", "koen", "koer", "koes", "kok", "kon", "kook", "kool", "koor", "koos", "koud", "kouw", "kuif", "kuip", "kuis", "kuit", "kun", "kus", "laat", "laf", "lag", "lak", "las", "leef", "leek", "leem", "leen", "leep", "leer", "lef", "lei", "lel", "lep", "les", "let", "leun", "leur", "lied", "lieg", "liep", "liet", "lijf", "lijk", "lijm", "lijp", "lik", "loef", "loer", "lof", "log", "lok", "loof", "loog", "look", "loom"], "2_2": ["schroom", "stoom", "kroon", "schoon", "kroost", "oost", "bloot", "sloot", "vloot", "stoot", "schoot", "kloot", "schaar", "spaar", "staar", "zwaar", "baard", "waard", "zwaard", "haard", "aard", "kaart", "vaart", "maart", "soort", "poort", "koort", "moord", "noord", "woord", "boord", "sport", "kort", "stort", "schort", "krot", "slot", "snot", "spot", "grot", "schot", "klok", "slok", "stok", "wrok", "schok", "brok", "kruk", "stuk", "pluk", "krul", "smul", "spul", "slab", "krach", "lach", "vlag", "slag", "vraag", "klaag", "draag", "slaag", "plaag", "streek", "preek", "kreek", "breek", "spreek", "steek", "smeek", "strijk", "blijk", "slijk", "strik", "prik", "klik", "slik", "schrik", "kwik", "stik", "blijft", "schijn", "schoen", "schoor", "schaal", "schaam", "schat", "schelp", "scherp", "scherm", "schijf", "schil", "schim", "school", "schor", "schouw", "schrap", "schreef", "schrift", "schub", "schud", "schuim", "schuit", "schuld", "schuur", "slaaf", "slaak", "slaap", "slaat", "slacht", "slap", "slecht", "sleep", "sleet", "sleuf", "slijm", "slijp", "slim", "sling", "slink", "slip", "slob", "sloeg", "sloep", "slof", "slomp", "slons", "sloof", "sloop", "slop", "slorp", "sluik", "smaak", "smacht", "smak", "smart", "smed", "smeed", "smeer", "smelt", "smet", "smeul", "smid", "smijt", "smok", "smook", "smoor", "snaar", "snak", "snap"], "3_2": ["sterrenkijker", "planeet", "zonnestelsel", "maanlanding", "astronaut", "raket", "satelliet", "melkweg", "komeet", "zwaartekracht", "bibliotheek", "boekenkast", "leesboek", "prentenboek", "stripboek", "woordenboek", "encyclopedie", "krantenartikel", "tijdschrift", "hoofdstuk", "bladzijde", "inhoudsopgave", "schrijver", "tekenaar", "uitgeverij", "boekenlegger", "leesbril", "leeslamp", "boekenwurm", "verhaal", "sprookje", "avontuur", "geheim", "schatkist", "piraten", "zeerover", "toverstaf", "tovenaar", "heksenbezem", "draken", "ridder", "kasteel", "ophaalbrug", "slotgracht", "koningin", "prinses", "kroonjuwelen", "troonzaal", "paleis", "hofnar", "muziekinstrument", "gitaar", "piano", "viool", "trompet", "dwarsfluit", "klarinet", "drumstel", "slagwerk", "dirigent", "orkest", "concertzaal", "melodie", "ritme", "refrein", "couplet", "zangeres", "koptelefoon", "luidspreker", "microfoon", "televisie", "afstandsbediening", "computer", "toetsenbord", "beeldscherm", "muismat", "printer", "internet", "wachtwoord", "website", "telefoon", "oplader", "batterij", "stopcontact", "stekkerdoos", "verlengsnoer", "schakelaar", "gloeilamp", "zakrekenmachine", "wekker", "keukenkast", "koelkast", "diepvries", "magnetron", "vaatwasser", "wasmachine", "stofzuiger", "strijkijzer", "koffiezetapparaat", "waterkoker", "broodrooster", "soeppan", "koekenpan", "snijplank", "aardappelschilmes", "garde", "pollepel", "vergiet", "maatbeker", "weegschaal", "badkamer", "tandenborstel", "tandpasta", "douchekop", "badkuip", "wastafel", "spiegelkast", "scheermes", "haardroger", "prullenbak", "bezem", "stoffer", "emmer", "dweil", "schoonmaakmiddel", "waslijn", "wasknijper", "strijkbout", "kledingkast", "winterjas", "regenjas", "zomerjurk", "spijkerbroek", "trainingspak", "pyjama", "badjas", "onderbroek", "sokken", "pantoffels", "wandelschoenen", "regenlaarzen", "zonnebril", "paraplu", "handschoenen", "oorwarmers", "zwemvliezen", "duikbril", "snorkel", "reddingsvest", "avondschool"]};
+
+// Cito DMT reference thresholds (total words across cards in 3 min, or 2 min for M3)
+// Per card average WPM is calculated from total words / number of cards
+const NORMS = {
+  "M3": { cards: 2, label: "Kaart 1 + 2 (of alleen Kaart 1 bij ≤ 25 woorden)", ranges: { V: [0, 29], IV: [30, 44], III: [45, 64], II: [65, 84], I: [85, 110] }, wpm: { V: 14, IV: 20, III: 28, II: 38, I: 48 } },
+  "E3": { cards: 3, label: "Kaart 1 + 2 + 3 (of Kaart 1 + 2 bij ≤ 23 woorden op kaart 2)", ranges: { V: [0, 56], IV: [57, 77], III: [78, 102], II: [103, 128], I: [129, 165] }, wpm: { V: 18, IV: 24, III: 32, II: 40, I: 48 } },
+  "M4": { cards: 3, label: "Kaart 1 + 2 + 3", ranges: { V: [0, 80], IV: [81, 104], III: [105, 129], II: [130, 152], I: [153, 190] }, wpm: { V: 25, IV: 32, III: 40, II: 48, I: 56 } },
+  "E4": { cards: 3, label: "Kaart 1 + 2 + 3", ranges: { V: [0, 98], IV: [99, 122], III: [123, 146], II: [147, 168], I: [169, 205] }, wpm: { V: 31, IV: 38, III: 46, II: 53, I: 61 } },
+  "M5": { cards: 3, label: "Kaart 1 + 2 + 3 (of Kaart 2 + 3 bij ≥ 121 woorden)", ranges: { V: [0, 109], IV: [110, 132], III: [133, 154], II: [155, 174], I: [175, 215] }, wpm: { V: 34, IV: 41, III: 48, II: 55, I: 63 } },
+  "E5": { cards: 3, label: "Kaart 1 + 2 + 3 (of Kaart 2 + 3 bij ≥ 121 woorden)", ranges: { V: [0, 118], IV: [119, 140], III: [141, 161], II: [162, 180], I: [181, 225] }, wpm: { V: 37, IV: 44, III: 51, II: 58, I: 66 } },
+  "M6": { cards: 3, label: "Kaart 1 + 2 + 3 (of Kaart 2 + 3 bij ≥ 121 woorden)", ranges: { V: [0, 123], IV: [124, 144], III: [145, 164], II: [165, 182], I: [183, 230] }, wpm: { V: 39, IV: 46, III: 52, II: 59, I: 67 } },
+  "E6": { cards: 3, label: "Kaart 1 + 2 + 3 (of Kaart 2 + 3 bij ≥ 121 woorden)", ranges: { V: [0, 126], IV: [127, 147], III: [148, 166], II: [167, 184], I: [185, 235] }, wpm: { V: 40, IV: 47, III: 53, II: 60, I: 68 } },
+  "M7": { cards: 3, label: "Kaart 1 + 2 + 3 (M7: V ≤ 128 | IV 129–149 | III 150–166 | II 167–181 | I ≥ 182)", ranges: { V: [0, 128], IV: [129, 149], III: [150, 166], II: [167, 181], I: [182, 240] }, wpm: { V: 41, IV: 47, III: 53, II: 58, I: 64 } },
+  "E7": { cards: 3, label: "Kaart 1 + 2 + 3 (E7: V ≤ 133 | IV 134–155 | III 156–172 | II 173–187 | I ≥ 188)", ranges: { V: [0, 133], IV: [134, 155], III: [156, 172], II: [173, 187], I: [188, 245] }, wpm: { V: 43, IV: 49, III: 55, II: 60, I: 66 } },
+  "M8": { cards: 3, label: "Kaart 1 + 2 + 3 (of Kaart 2 + 3 bij ≥ 121 woorden)", ranges: { V: [0, 135], IV: [136, 157], III: [158, 174], II: [175, 189], I: [190, 250] }, wpm: { V: 44, IV: 50, III: 56, II: 61, I: 67 } }
+};
+
+let state = {
+  variant: "O1",
+  card: "1",
+  mode: "parts",
+  part: 0,
+  level: "III",
+  wpm: 53,
+  running: false,
+  timerId: null,
+  wordTimerId: null,
+  countdownId: null,
+  secondsLeft: 60,
+  wordIdx: 0,
+  wordsShown: 0
+};
+
+function getCardKey() {
+  if (state.variant === "A") return state.card + "A";
+  if (state.variant === "B") return state.card + "B";
+  if (state.variant === "O1") return state.card + "_1";
+  return state.card + "_2";
+}
+
+function getCardLabel() {
+  const map = {
+    "1A": "Cito Kaart 1A", "1B": "Cito Kaart 1B",
+    "2A": "Cito Kaart 2A", "2B": "Cito Kaart 2B",
+    "3A": "Cito Kaart 3A", "3B": "Cito Kaart 3B",
+    "1_1": "Oefenversie 1 · Kaart 1", "2_1": "Oefenversie 1 · Kaart 2", "3_1": "Oefenversie 1 · Kaart 3",
+    "1_2": "Oefenversie 2 · Kaart 1", "2_2": "Oefenversie 2 · Kaart 2", "3_2": "Oefenversie 2 · Kaart 3"
+  };
+  return map[getCardKey()];
+}
+
+function getActiveWordList() {
+  const list = WORDS[getCardKey()];
+  if (state.mode === "parts") {
+    return list.slice(state.part * 50, (state.part + 1) * 50);
+  }
+  return list;
+}
+
+function setVariant(v) {
+  stopAll();
+  state.variant = v;
+  document.querySelectorAll("#variantGroup .seg-btn").forEach(b => b.classList.toggle("active", b.dataset.var === v));
+  resetSession();
+}
+
+function setCard(c) {
+  stopAll();
+  state.card = c;
+  document.querySelectorAll("#cardGroup .seg-btn").forEach(b => b.classList.toggle("active", b.dataset.card === c));
+  resetSession();
+}
+
+function setMode(m) {
+  stopAll();
+  state.mode = m;
+  document.querySelectorAll("#modeGroup .seg-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === m));
+  document.getElementById("partGroup").style.display = (m === "parts") ? "flex" : "none";
+  if (m === "sequence") setCard("1");
+  resetSession();
+}
+
+function setPart(p) {
+  stopAll();
+  state.part = p;
+  document.querySelectorAll("#partGroup .seg-btn").forEach(b => b.classList.toggle("active", Number(b.dataset.part) === p));
+  resetSession();
+}
+
+function updateNorms() {
+  const mom = document.getElementById("momentSelect").value;
+  const info = NORMS[mom];
+  ["V","IV","III","II","I"].forEach(l => {
+    document.getElementById("wpm" + l).textContent = info.wpm[l] + " wpm";
+  });
+  selectLevel(state.level);
+}
+
+function selectLevel(lvl) {
+  state.level = lvl;
+  document.querySelectorAll("#levelGrid .lvl-btn").forEach(b => b.classList.toggle("active", b.dataset.lvl === lvl));
+  const mom = document.getElementById("momentSelect").value;
+  const info = NORMS[mom];
+  const targetWpm = info.wpm[lvl];
+  setManualWpm(targetWpm, true);
+  const r = info.ranges[lvl];
+  const rangeTxt = lvl === "I" ? `≥ ${r[0]} woorden` : `${r[0]} – ${r[1]} woorden`;
+  document.getElementById("normInfo").innerHTML =
+    `<strong>${mom} · Niveau ${lvl}:</strong> Cito-norm totaalscore <strong>${rangeTxt}</strong> (${info.label}). Streeftempo per kaart: <strong>${targetWpm} woorden/min</strong>.`;
+}
+
+function setManualWpm(val, keepLevel=false) {
+  const wpm = Math.max(10, Math.min(220, Number(val) || 50));
+  state.wpm = wpm;
+  document.getElementById("wpmSlider").value = wpm;
+  document.getElementById("wpmInput").value = wpm;
+  document.getElementById("activeSpeedBadge").textContent = wpm + " woorden/min";
+  if (!keepLevel) {
+    document.querySelectorAll("#levelGrid .lvl-btn").forEach(b => b.classList.remove("active"));
+  }
+  if (state.running) {
+    clearInterval(state.wordTimerId);
+    const intervalMs = Math.round(60000 / state.wpm);
+    state.wordTimerId = setInterval(advanceWord, intervalMs);
+  }
+}
+
+function beep(freq=660, dur=140) {
+  if (!document.getElementById("soundCheck").checked) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur/1000);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + dur/1000);
+  } catch(e) {}
+}
+
+function stopAll() {
+  state.running = false;
+  clearInterval(state.timerId);
+  clearInterval(state.wordTimerId);
+  clearInterval(state.countdownId);
+  document.getElementById("startBtn").textContent = "▶ Start 1 minuut";
+}
+
+function resetSession() {
+  stopAll();
+  state.secondsLeft = 60;
+  state.wordIdx = 0;
+  state.wordsShown = 0;
+  document.getElementById("timerDisplay").textContent = "01:00";
+  document.getElementById("progressBar").style.width = "0%";
+  const partSuffix = state.mode === "parts" ? ` · Deel ${state.part + 1} (${state.part*50+1}–${(state.part+1)*50})` : "";
+  document.getElementById("activeCardBadge").textContent = getCardLabel() + partSuffix;
+  document.getElementById("wordDisplay").textContent = "Klaar?";
+  document.getElementById("wordSub").textContent = "Druk op Start om 1 minuut te flitsen";
+}
+
+function togglePlay() {
+  if (state.running) {
+    stopAll();
+    document.getElementById("wordSub").textContent = `Gepauzeerd op woord ${state.wordsShown}`;
+    return;
+  }
+  if (state.secondsLeft <= 0) resetSession();
+
+  if (document.getElementById("countdownCheck").checked && state.secondsLeft === 60 && state.wordsShown === 0) {
+    let c = 3;
+    document.getElementById("wordDisplay").textContent = c;
+    document.getElementById("wordSub").textContent = "Maak je klaar...";
+    beep(520, 90);
+    state.countdownId = setInterval(() => {
+      c--;
+      if (c > 0) {
+        document.getElementById("wordDisplay").textContent = c;
+        beep(520, 90);
+      } else {
+        clearInterval(state.countdownId);
+        beginFlashing();
+      }
+    }, 700);
+  } else {
+    beginFlashing();
+  }
+}
+
+function beginFlashing() {
+  state.running = true;
+  document.getElementById("startBtn").textContent = "⏸ Pauzeer";
+  showCurrentWord();
+  const intervalMs = Math.round(60000 / state.wpm);
+  state.wordTimerId = setInterval(advanceWord, intervalMs);
+  state.timerId = setInterval(() => {
+    state.secondsLeft--;
+    const mm = String(Math.floor(state.secondsLeft / 60)).padStart(2, "0");
+    const ss = String(state.secondsLeft % 60).padStart(2, "0");
+    document.getElementById("timerDisplay").textContent = `${mm}:${ss}`;
+    document.getElementById("progressBar").style.width = (((60 - state.secondsLeft) / 60) * 100) + "%";
+    if (state.secondsLeft <= 0) {
+      finishMinute();
+    }
+  }, 1000);
+}
+
+function showCurrentWord() {
+  const list = getActiveWordList();
+  const w = list[state.wordIdx % list.length];
+  document.getElementById("wordDisplay").textContent = w;
+  state.wordsShown++;
+  document.getElementById("wordSub").textContent = `Woord ${state.wordsShown} · Tempo: ${state.wpm} wpm`;
+  const dot = document.getElementById("pulseDot");
+  dot.classList.add("beat");
+  setTimeout(() => dot.classList.remove("beat"), 110);
+}
+
+function advanceWord() {
+  state.wordIdx++;
+  showCurrentWord();
+}
+
+function finishMinute() {
+  stopAll();
+  beep(880, 320);
+  document.getElementById("wordDisplay").textContent = "Tijd is om!";
+  document.getElementById("wordSub").textContent = `1 minuut voltooid · ${state.wordsShown} woorden getoond (${state.wpm} wpm)`;
+}
+
+function nextBlock() {
+  if (state.mode === "parts") {
+    setPart((state.part + 1) % 3);
+  } else if (state.mode === "sequence") {
+    const nextC = state.card === "1" ? "2" : (state.card === "2" ? "3" : "1");
+    setCard(nextC);
+  } else {
+    resetSession();
+  }
+}
+
+function toggleFullscreen() {
+  document.getElementById("flashStage").classList.toggle("fullscreen");
+}
+
+function openWordModal() {
+  const list = WORDS[getCardKey()];
+  document.getElementById("modalTitle").textContent = getCardLabel() + " — Volledige woordenlijst (150 woorden)";
+  const colsEl = document.getElementById("wordCols");
+  colsEl.innerHTML = "";
+  for (let col = 0; col < 5; col++) {
+    const div = document.createElement("div");
+    div.className = "word-col";
+    for (let row = 0; row < 30; row++) {
+      const idx = col * 30 + row;
+      const r = document.createElement("div");
+      r.className = "word-row";
+      r.innerHTML = `<span class="num">${idx + 1}</span><span class="txt">${list[idx]}</span>`;
+      div.appendChild(r);
+    }
+    colsEl.appendChild(div);
+  }
+  document.getElementById("wordModal").classList.add("open");
+}
+
+function closeWordModal() {
+  document.getElementById("wordModal").classList.remove("open");
+}
+
+updateNorms();
+resetSession();
+</script>
+</body>
+</html>
